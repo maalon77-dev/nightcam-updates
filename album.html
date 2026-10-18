@@ -39,6 +39,7 @@
     <div class="sub" id="subtitle">Carregando álbum…</div>
     <div class="count" id="count"></div>
     <div class="hint">Baixar salva o vídeo · Excluir remove deste álbum neste aparelho</div>
+    <button type="button" id="btnRestore" class="btn-open" style="max-width:280px;margin:10px auto;display:none;">RESTAURAR EXCLUIDOS</button>
   </header>
   <div class="wrap" id="wrap">
     <div class="loading">Abrindo galeria…</div>
@@ -105,10 +106,19 @@
     function render() {
       var wrap = document.getElementById('wrap');
       var count = document.getElementById('count');
+      var restoreBtn = document.getElementById('btnRestore');
+      var deleted = loadDeleted();
       var videos = visibleVideos().slice().sort(function(a,b){ return (b.uploadedAt||0)-(a.uploadedAt||0); });
-      count.textContent = videos.length + ' vídeo(s) · do mais novo ao mais antigo';
+      count.textContent = videos.length + ' de ' + allVideos.length + ' vídeo(s) · do mais novo ao mais antigo';
+      if (restoreBtn) {
+        restoreBtn.style.display = deleted.length ? 'block' : 'none';
+        restoreBtn.onclick = function() {
+          saveDeleted([]);
+          render();
+        };
+      }
       if (!videos.length) {
-        wrap.innerHTML = '<p class="empty">Nenhum vídeo neste álbum.<br><span class="hint">Os excluídos ficam só fora desta tela.</span></p>';
+        wrap.innerHTML = '<p class="empty">Nenhum vídeo neste álbum.<br><span class="hint">Se excluiu por engano, toque em RESTAURAR EXCLUIDOS.</span></p>';
         return;
       }
       wrap.innerHTML = videos.map(function(v, i){
