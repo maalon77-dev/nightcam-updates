@@ -1,7 +1,7 @@
 {
-  "versionCode": 17,
-  "versionName": "2.0.2",
-  "apkUrl": "https://files.catbox.moe/ur0yuw.apk",
-  "notes": "Fix album: todos os videos enviados no QR",
-  "publishedAt": "2026-10-18T01:45:00Z"
+  "versionCode": 18,
+  "versionName": "2.0.3",
+  "apkUrl": "https://files.catbox.moe/l9zs3q.apk",
+  "notes": "Barra e % grandes no envio de cada video",
+  "publishedAt": "2026-10-18T01:50:00Z"
 }
