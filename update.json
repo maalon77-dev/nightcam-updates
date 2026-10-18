@@ -1,7 +1,7 @@
 {
-  "versionCode": 11,
-  "versionName": "1.9.1",
-  "apkUrl": "https://files.catbox.moe/gtnpid.apk",
-  "notes": "QR album abre galeria visual (nao codigo HTML)",
-  "publishedAt": "2026-10-18T01:16:00Z"
+  "versionCode": 12,
+  "versionName": "1.9.2",
+  "apkUrl": "https://files.catbox.moe/wm6mgi.apk",
+  "notes": "Correcao: verificacao de update agora funciona no relogio",
+  "publishedAt": "2026-10-18T01:20:00Z"
 }
