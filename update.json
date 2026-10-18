@@ -1,7 +1,7 @@
 {
-  "versionCode": 12,
-  "versionName": "1.9.2",
-  "apkUrl": "https://files.catbox.moe/wm6mgi.apk",
-  "notes": "Correcao: verificacao de update agora funciona no relogio",
-  "publishedAt": "2026-10-18T01:20:00Z"
+  "versionCode": 13,
+  "versionName": "1.9.3",
+  "apkUrl": "https://files.catbox.moe/l7o95f.apk",
+  "notes": "Progresso % visivel ao atualizar",
+  "publishedAt": "2026-10-18T01:25:00Z"
 }
