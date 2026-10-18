@@ -10,16 +10,25 @@
     body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #0B1220; color: #F1F5F9; }
     header { padding: 20px 16px 8px; text-align: center; }
     h1 { margin: 0; color: #2EE6A6; font-size: 22px; letter-spacing: .08em; }
-    .sub, .count, .err { color: #94A3B8; font-size: 13px; margin-top: 6px; }
+    .sub, .count, .err, .hint { color: #94A3B8; font-size: 13px; margin-top: 6px; }
     .count { color: #4CC9F0; }
+    .hint { font-size: 12px; }
     .err { color: #FB7185; padding: 24px; text-align: center; }
     .wrap { padding: 12px 14px 40px; max-width: 720px; margin: 0 auto; }
     .card { background: #121A2B; border: 1px solid #334155; border-radius: 16px; padding: 14px; margin: 14px 0; }
     .meta { color: #64748B; font-size: 12px; }
     h2 { font-size: 15px; margin: 6px 0 10px; word-break: break-all; }
     video { width: 100%; border-radius: 12px; background: #000; max-height: 70vh; }
-    .btn { display: block; text-align: center; margin-top: 12px; padding: 12px; border-radius: 12px;
-           background: #2EE6A6; color: #042F2E; font-weight: 700; text-decoration: none; }
+    .actions { display: flex; gap: 8px; margin-top: 12px; }
+    .actions a, .actions button {
+      flex: 1; text-align: center; padding: 14px 8px; border-radius: 12px;
+      font-weight: 700; font-size: 15px; text-decoration: none; border: 0; cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-dl { background: #2EE6A6; color: #042F2E; }
+    .btn-del { background: #BE123C; color: #FFF1F2; }
+    .btn-open { background: #0C4A6E; color: #E0F2FE; margin-top: 8px; display: block; width: 100%;
+                text-align: center; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; }
     .empty { text-align: center; color: #94A3B8; padding: 40px 10px; }
     .loading { text-align: center; padding: 40px; color: #94A3B8; }
   </style>
@@ -29,55 +38,127 @@
     <h1>NIGHTCAM</h1>
     <div class="sub" id="subtitle">Carregando álbum…</div>
     <div class="count" id="count"></div>
+    <div class="hint">Baixar salva o vídeo · Excluir remove deste álbum neste aparelho</div>
   </header>
   <div class="wrap" id="wrap">
     <div class="loading">Abrindo galeria…</div>
   </div>
   <script>
+    var albumKey = '';
+    var allVideos = [];
+
     function esc(s) {
       return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
     function fmt(ts) {
+      try { return new Date(ts).toLocaleString('pt-BR'); } catch (e) { return ''; }
+    }
+    function storageKey() {
+      return 'nightcam_deleted_' + albumKey;
+    }
+    function loadDeleted() {
       try {
-        return new Date(ts).toLocaleString('pt-BR');
-      } catch (e) { return ''; }
+        return JSON.parse(localStorage.getItem(storageKey()) || '[]');
+      } catch (e) { return []; }
+    }
+    function saveDeleted(list) {
+      try { localStorage.setItem(storageKey(), JSON.stringify(list)); } catch (e) {}
+    }
+    function visibleVideos() {
+      var deleted = loadDeleted();
+      return allVideos.filter(function(v){ return deleted.indexOf(v.url) === -1; });
+    }
+    function fileNameFromVideo(v) {
+      var n = (v.name || 'nightcam_video.mp4').replace(/[^\w.\-]+/g, '_');
+      if (!/\.(mp4|webm|3gp|mkv)$/i.test(n)) n += '.mp4';
+      return n;
+    }
+    function downloadVideo(url, name) {
+      // Prefer direct download attribute; fallback fetch+blob for cross-origin
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = name || 'nightcam_video.mp4';
+      a.target = '_blank';
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Also try blob download when possible
+      fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
+        var obj = URL.createObjectURL(blob);
+        var b = document.createElement('a');
+        b.href = obj;
+        b.download = name || 'nightcam_video.mp4';
+        document.body.appendChild(b);
+        b.click();
+        b.remove();
+        setTimeout(function(){ URL.revokeObjectURL(obj); }, 2000);
+      }).catch(function(){ /* direct link already opened */ });
+    }
+    function deleteVideo(url) {
+      if (!confirm('Excluir este vídeo do álbum neste aparelho?')) return;
+      var deleted = loadDeleted();
+      if (deleted.indexOf(url) === -1) deleted.push(url);
+      saveDeleted(deleted);
+      render();
+    }
+    function render() {
+      var wrap = document.getElementById('wrap');
+      var count = document.getElementById('count');
+      var videos = visibleVideos().slice().sort(function(a,b){ return (b.uploadedAt||0)-(a.uploadedAt||0); });
+      count.textContent = videos.length + ' vídeo(s) · do mais novo ao mais antigo';
+      if (!videos.length) {
+        wrap.innerHTML = '<p class="empty">Nenhum vídeo neste álbum.<br><span class="hint">Os excluídos ficam só fora desta tela.</span></p>';
+        return;
+      }
+      wrap.innerHTML = videos.map(function(v, i){
+        var name = esc(v.name || 'video');
+        var url = esc(v.url || '');
+        var rawUrl = v.url || '';
+        var when = esc(fmt(v.uploadedAt));
+        var fname = esc(fileNameFromVideo(v));
+        return '<article class="card" data-url="' + url + '">' +
+          '<div class="meta">' + when + '</div>' +
+          '<h2>' + name + '</h2>' +
+          '<video src="' + url + '" controls playsinline preload="metadata"></video>' +
+          '<div class="actions">' +
+            '<button type="button" class="btn-dl" data-dl="' + url + '" data-name="' + fname + '">BAIXAR</button>' +
+            '<button type="button" class="btn-del" data-del="' + url + '">EXCLUIR</button>' +
+          '</div>' +
+          '<a class="btn-open" href="' + url + '" target="_blank" rel="noopener">Abrir no navegador</a>' +
+        '</article>';
+      }).join('');
+
+      wrap.querySelectorAll('[data-dl]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          downloadVideo(btn.getAttribute('data-dl'), btn.getAttribute('data-name'));
+        });
+      });
+      wrap.querySelectorAll('[data-del]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          deleteVideo(btn.getAttribute('data-del'));
+        });
+      });
     }
     async function main() {
-      const params = new URLSearchParams(location.search);
-      let src = params.get('src') || params.get('json');
-      const wrap = document.getElementById('wrap');
-      const subtitle = document.getElementById('subtitle');
-      const count = document.getElementById('count');
+      var params = new URLSearchParams(location.search);
+      var src = params.get('src') || params.get('json');
+      var wrap = document.getElementById('wrap');
+      var subtitle = document.getElementById('subtitle');
       if (!src) {
         wrap.innerHTML = '<div class="err">Álbum inválido. Escaneie o QR de novo no NightCam.</div>';
         return;
       }
+      try { src = decodeURIComponent(src); } catch (e) {}
+      albumKey = src;
       try {
-        src = decodeURIComponent(src);
-      } catch (e) {}
-      try {
-        const res = await fetch(src, { cache: 'no-store' });
+        var res = await fetch(src, { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const deviceId = data.deviceId || '—';
-        const videos = (data.videos || []).slice().sort(function(a,b){ return (b.uploadedAt||0)-(a.uploadedAt||0); });
+        var data = await res.json();
+        var deviceId = data.deviceId || '—';
+        allVideos = data.videos || [];
         subtitle.textContent = 'Álbum do aparelho · ' + deviceId;
-        count.textContent = videos.length + ' vídeo(s) · do mais novo ao mais antigo';
-        if (!videos.length) {
-          wrap.innerHTML = '<p class="empty">Nenhum vídeo neste álbum ainda.</p>';
-          return;
-        }
-        wrap.innerHTML = videos.map(function(v){
-          const name = esc(v.name || 'video');
-          const url = esc(v.url || '');
-          const when = esc(fmt(v.uploadedAt));
-          return '<article class="card">' +
-            '<div class="meta">' + when + '</div>' +
-            '<h2>' + name + '</h2>' +
-            '<video src="' + url + '" controls playsinline preload="metadata"></video>' +
-            '<a class="btn" href="' + url + '" target="_blank" rel="noopener">Abrir vídeo</a>' +
-            '</article>';
-        }).join('');
+        render();
       } catch (e) {
         wrap.innerHTML = '<div class="err">Não foi possível abrir o álbum.<br>' + esc(e.message) + '</div>';
       }
