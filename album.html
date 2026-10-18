@@ -11,7 +11,7 @@
     header { padding: 20px 16px 8px; text-align: center; }
     h1 { margin: 0; color: #2EE6A6; font-size: 22px; letter-spacing: .08em; }
     .sub, .count, .err, .hint { color: #94A3B8; font-size: 13px; margin-top: 6px; }
-    .count { color: #4CC9F0; }
+    .count { color: #4CC9F0; font-size: 18px; font-weight: 700; }
     .hint { font-size: 12px; }
     .err { color: #FB7185; padding: 24px; text-align: center; }
     .wrap { padding: 12px 14px 40px; max-width: 720px; margin: 0 auto; }
@@ -38,8 +38,8 @@
     <h1>NIGHTCAM</h1>
     <div class="sub" id="subtitle">Carregando álbum…</div>
     <div class="count" id="count"></div>
-    <div class="hint">Baixar salva o vídeo · Excluir remove deste álbum neste aparelho</div>
-    <button type="button" id="btnRestore" class="btn-open" style="max-width:280px;margin:10px auto;display:none;">RESTAURAR EXCLUIDOS</button>
+    <div class="hint">Baixar salva o vídeo · Excluir remove só neste aparelho</div>
+    <button type="button" id="btnRestore" class="btn-open" style="max-width:320px;margin:10px auto;display:none;">RESTAURAR EXCLUIDOS</button>
   </header>
   <div class="wrap" id="wrap">
     <div class="loading">Abrindo galeria…</div>
@@ -47,6 +47,7 @@
   <script>
     var albumKey = '';
     var allVideos = [];
+    var deviceId = '';
 
     function esc(s) {
       return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -55,7 +56,9 @@
       try { return new Date(ts).toLocaleString('pt-BR'); } catch (e) { return ''; }
     }
     function storageKey() {
-      return 'nightcam_deleted_' + albumKey;
+      // Stable per device so republishing the album keeps exclude list consistent,
+      // and we can still restore everything.
+      return 'nightcam_deleted_v2_' + (deviceId || albumKey || 'unknown');
     }
     function loadDeleted() {
       try {
@@ -75,7 +78,6 @@
       return n;
     }
     function downloadVideo(url, name) {
-      // Prefer direct download attribute; fallback fetch+blob for cross-origin
       var a = document.createElement('a');
       a.href = url;
       a.download = name || 'nightcam_video.mp4';
@@ -84,7 +86,6 @@
       document.body.appendChild(a);
       a.click();
       a.remove();
-      // Also try blob download when possible
       fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
         var obj = URL.createObjectURL(blob);
         var b = document.createElement('a');
@@ -94,7 +95,7 @@
         b.click();
         b.remove();
         setTimeout(function(){ URL.revokeObjectURL(obj); }, 2000);
-      }).catch(function(){ /* direct link already opened */ });
+      }).catch(function(){});
     }
     function deleteVideo(url) {
       if (!confirm('Excluir este vídeo do álbum neste aparelho?')) return;
@@ -109,25 +110,33 @@
       var restoreBtn = document.getElementById('btnRestore');
       var deleted = loadDeleted();
       var videos = visibleVideos().slice().sort(function(a,b){ return (b.uploadedAt||0)-(a.uploadedAt||0); });
-      count.textContent = videos.length + ' de ' + allVideos.length + ' vídeo(s) · do mais novo ao mais antigo';
+      count.textContent = videos.length + ' visíveis · ' + allVideos.length + ' no álbum total';
       if (restoreBtn) {
-        restoreBtn.style.display = deleted.length ? 'block' : 'none';
-        restoreBtn.onclick = function() {
-          saveDeleted([]);
-          render();
-        };
+        if (deleted.length) {
+          restoreBtn.style.display = 'block';
+          restoreBtn.textContent = 'RESTAURAR ' + deleted.length + ' EXCLUÍDO(S)';
+          restoreBtn.onclick = function() {
+            saveDeleted([]);
+            render();
+          };
+        } else {
+          restoreBtn.style.display = 'none';
+        }
       }
-      if (!videos.length) {
-        wrap.innerHTML = '<p class="empty">Nenhum vídeo neste álbum.<br><span class="hint">Se excluiu por engano, toque em RESTAURAR EXCLUIDOS.</span></p>';
+      if (!allVideos.length) {
+        wrap.innerHTML = '<p class="empty">Álbum sem vídeos no JSON.<br><span class="hint">No relógio: Galeria → ENVIAR TODOS → QR DO ALBUM.</span></p>';
         return;
       }
-      wrap.innerHTML = videos.map(function(v, i){
+      if (!videos.length) {
+        wrap.innerHTML = '<p class="empty">Todos os ' + allVideos.length + ' vídeos estão ocultos neste aparelho.<br><span class="hint">Toque em RESTAURAR EXCLUÍDOS.</span></p>';
+        return;
+      }
+      wrap.innerHTML = videos.map(function(v){
         var name = esc(v.name || 'video');
         var url = esc(v.url || '');
-        var rawUrl = v.url || '';
         var when = esc(fmt(v.uploadedAt));
         var fname = esc(fileNameFromVideo(v));
-        return '<article class="card" data-url="' + url + '">' +
+        return '<article class="card">' +
           '<div class="meta">' + when + '</div>' +
           '<h2>' + name + '</h2>' +
           '<video src="' + url + '" controls playsinline preload="metadata"></video>' +
@@ -159,18 +168,32 @@
         wrap.innerHTML = '<div class="err">Álbum inválido. Escaneie o QR de novo no NightCam.</div>';
         return;
       }
-      try { src = decodeURIComponent(src); } catch (e) {}
+      // URLSearchParams already decodes once — only decode again if still encoded
+      if (/%2F|%3A/i.test(src)) {
+        try { src = decodeURIComponent(src); } catch (e) {}
+      }
       albumKey = src;
       try {
         var res = await fetch(src, { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        var data = await res.json();
-        var deviceId = data.deviceId || '—';
-        allVideos = data.videos || [];
-        subtitle.textContent = 'Álbum do aparelho · ' + deviceId;
+        var text = await res.text();
+        var data = JSON.parse(text);
+        deviceId = data.deviceId || '';
+        allVideos = Array.isArray(data.videos) ? data.videos : [];
+        // Deduplicate by url in case JSON has duplicates
+        var seen = {};
+        allVideos = allVideos.filter(function(v){
+          var u = (v && v.url) || '';
+          if (!u || seen[u]) return false;
+          seen[u] = true;
+          return true;
+        });
+        var declared = data.count != null ? data.count : allVideos.length;
+        subtitle.textContent = 'Álbum · ' + (deviceId || '—') + ' · JSON diz ' + declared + ' · carregados ' + allVideos.length;
         render();
       } catch (e) {
-        wrap.innerHTML = '<div class="err">Não foi possível abrir o álbum.<br>' + esc(e.message) + '</div>';
+        wrap.innerHTML = '<div class="err">Não foi possível abrir o álbum.<br>' + esc(e.message) +
+          '<br><span class="hint">Escaneie o QR de novo após ENVIAR TODOS.</span></div>';
       }
     }
     main();
