@@ -1,7 +1,7 @@
 {
-  "versionCode": 25,
-  "versionName": "2.1.2",
-  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.2/NightCam-v2.1.2.apk",
-  "notes": "Pr\u00e9via em p\u00e9 (retrato fixo) e enquadramento real da c\u00e2mera, sem zoom digital indesejado.",
-  "publishedAt": "2026-11-08T02:39:40Z"
+  "versionCode": 26,
+  "versionName": "2.1.3",
+  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.3/NightCam-v2.1.3.apk",
+  "notes": "QR abre p\u00e1gina com BAIXAR V\u00cdDEO; download direto na web (album + video.html).",
+  "publishedAt": "2026-11-08T02:42:59Z"
 }
