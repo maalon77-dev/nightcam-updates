@@ -1,7 +1,7 @@
 {
-  "versionCode": 29,
-  "versionName": "2.1.6",
-  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.6/NightCam-v2.1.6.apk",
-  "notes": "Preview do relogio: imagem agora em pe (gira de verdade) e preenche o quadrado. 2.1.6",
-  "publishedAt": "2026-11-08T03:17:42Z"
+  "versionCode": 30,
+  "versionName": "2.1.7",
+  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.7/NightCam-v2.1.7.apk",
+  "notes": "Preview em pe: revertido o calculo que distorcia e aplicada a rotacao que faltava. 2.1.7",
+  "publishedAt": "2026-11-08T03:25:46Z"
 }
