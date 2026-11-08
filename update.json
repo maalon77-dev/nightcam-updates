@@ -1,7 +1,7 @@
 {
-  "versionCode": 24,
-  "versionName": "2.1.1",
-  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.1/NightCam-v2.1.1.apk",
-  "notes": "Corre\u00e7\u00e3o da pr\u00e9via da c\u00e2mera: propor\u00e7\u00e3o certa, sem achatar nem zoom indevido (moldura 9:16 no telefone).",
-  "publishedAt": "2026-11-08T02:33:33Z"
+  "versionCode": 25,
+  "versionName": "2.1.2",
+  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.2/NightCam-v2.1.2.apk",
+  "notes": "Pr\u00e9via em p\u00e9 (retrato fixo) e enquadramento real da c\u00e2mera, sem zoom digital indesejado.",
+  "publishedAt": "2026-11-08T02:39:40Z"
 }
