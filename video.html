@@ -23,7 +23,7 @@
       font-weight: 700; font-size: 16px; text-decoration: none; border: 0; cursor: pointer;
       font-family: inherit; display: block;
     }
-    .btn-dl { background: #2EE6A6; color: #042F2E; }
+    .btn-dl { background: #2EE6A6; color: #042F2E; font-size: 18px; padding: 18px 14px; }
     .btn-dl-sub { background: #0C4A6E; color: #E0F2FE; font-size: 14px; padding: 12px; }
     .status { font-size: 13px; color: #4CC9F0; text-align: center; min-height: 1.2em; margin-top: 8px; }
   </style>
@@ -32,7 +32,7 @@
   <header>
     <h1>NIGHTCAM</h1>
     <div class="sub" id="subtitle">Vídeo compartilhado</div>
-    <div class="hint">Toque em <strong>BAIXAR VÍDEO</strong> para salvar o arquivo no aparelho</div>
+    <div class="hint">Use o botão verde <strong>Baixar vídeo</strong> para salvar o arquivo no aparelho</div>
   </header>
   <div class="wrap" id="wrap">
     <p class="err">Carregando…</p>
@@ -79,7 +79,7 @@
     }
     async function downloadVideo(url, fname) {
       var btn = document.getElementById('btnDl');
-      if (btn) { btn.disabled = true; btn.textContent = 'BAIXANDO…'; }
+      if (btn) { btn.disabled = true; btn.textContent = 'Baixando…'; }
       setStatus('Baixando arquivo…');
       try {
         var res = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'no-store' });
@@ -89,7 +89,7 @@
             saveBlob(blob, fname);
             setStatus('Arquivo pronto — confira seus downloads.');
             if (await tryShareFile(blob, fname)) setStatus('Salvo / compartilhado.');
-            if (btn) { btn.disabled = false; btn.textContent = 'BAIXAR VÍDEO'; }
+            if (btn) { btn.disabled = false; btn.textContent = 'Baixar vídeo'; }
             return;
           }
         }
@@ -143,8 +143,8 @@
           '<video src="' + esc(videoUrl) + '" controls playsinline preload="metadata"></video>' +
           '<div class="status" id="status"></div>' +
           '<div class="actions">' +
-            '<button type="button" class="btn-dl" id="btnDl">BAIXAR VÍDEO</button>' +
-            '<a class="btn-dl-sub" href="' + esc(videoUrl) + '" download="' + esc(fname) + '" target="_blank" rel="noopener noreferrer">Link direto do MP4</a>' +
+            '<button type="button" class="btn-dl" id="btnDl" aria-label="Baixar vídeo para o aparelho">Baixar vídeo</button>' +
+            '<a class="btn-dl-sub" href="' + esc(videoUrl) + '" download="' + esc(fname) + '" target="_blank" rel="noopener noreferrer">Alternativa: abrir arquivo MP4</a>' +
           '</div>' +
         '</article>';
       document.getElementById('btnDl').addEventListener('click', function() {

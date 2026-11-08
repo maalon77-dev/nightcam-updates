@@ -38,7 +38,7 @@
     <h1>NIGHTCAM</h1>
     <div class="sub" id="subtitle">Carregando álbum…</div>
     <div class="count" id="count"></div>
-    <div class="hint">Baixar salva o vídeo · Excluir remove só neste aparelho</div>
+    <div class="hint">Em cada vídeo: botão verde <strong>Baixar vídeo</strong> · Excluir só neste aparelho</div>
     <button type="button" id="btnRestore" class="btn-open" style="max-width:320px;margin:10px auto;display:none;">RESTAURAR EXCLUIDOS</button>
   </header>
   <div class="wrap" id="wrap">
@@ -163,7 +163,7 @@
           '<h2>' + name + '</h2>' +
           '<video src="' + url + '" controls playsinline preload="metadata"></video>' +
           '<div class="actions">' +
-            '<button type="button" class="btn-dl" data-dl="' + url + '" data-name="' + fname + '">BAIXAR VÍDEO</button>' +
+            '<button type="button" class="btn-dl" data-dl="' + url + '" data-name="' + fname + '" aria-label="Baixar vídeo">Baixar vídeo</button>' +
             '<a class="btn-open" href="' + page + '">Página só deste vídeo (QR / download)</a>' +
             '<a class="btn-open" href="' + url + '" download="' + fname + '" target="_blank" rel="noopener noreferrer">Link direto MP4</a>' +
             '<button type="button" class="btn-del" data-del="' + url + '">EXCLUIR</button>' +
