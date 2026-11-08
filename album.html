@@ -77,25 +77,31 @@
       if (!/\.(mp4|webm|3gp|mkv)$/i.test(n)) n += '.mp4';
       return n;
     }
-    function downloadVideo(url, name) {
+    async function downloadVideo(url, name) {
+      var fname = name || 'nightcam_video.mp4';
       var a = document.createElement('a');
       a.href = url;
-      a.download = name || 'nightcam_video.mp4';
+      a.download = fname;
       a.target = '_blank';
-      a.rel = 'noopener';
+      a.rel = 'noopener noreferrer';
       document.body.appendChild(a);
       a.click();
       a.remove();
-      fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
+      try {
+        var res = await fetch(url, { mode: 'cors', credentials: 'omit' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var blob = await res.blob();
         var obj = URL.createObjectURL(blob);
         var b = document.createElement('a');
         b.href = obj;
-        b.download = name || 'nightcam_video.mp4';
+        b.download = fname;
         document.body.appendChild(b);
         b.click();
         b.remove();
-        setTimeout(function(){ URL.revokeObjectURL(obj); }, 2000);
-      }).catch(function(){});
+        setTimeout(function(){ URL.revokeObjectURL(obj); }, 3000);
+      } catch (e) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
     }
     function deleteVideo(url) {
       if (!confirm('Excluir este vídeo do álbum neste aparelho?')) return;
@@ -141,10 +147,11 @@
           '<h2>' + name + '</h2>' +
           '<video src="' + url + '" controls playsinline preload="metadata"></video>' +
           '<div class="actions">' +
-            '<button type="button" class="btn-dl" data-dl="' + url + '" data-name="' + fname + '">BAIXAR</button>' +
+            '<button type="button" class="btn-dl" data-dl="' + url + '" data-name="' + fname + '">BAIXAR VÍDEO</button>' +
+            '<a class="btn-open" href="' + url + '" download="' + fname + '" target="_blank" rel="noopener noreferrer">Salvar arquivo (MP4)</a>' +
             '<button type="button" class="btn-del" data-del="' + url + '">EXCLUIR</button>' +
           '</div>' +
-          '<a class="btn-open" href="' + url + '" target="_blank" rel="noopener">Abrir no navegador</a>' +
+          '<a class="btn-open" href="' + url + '" target="_blank" rel="noopener noreferrer">Abrir no navegador</a>' +
         '</article>';
       }).join('');
 

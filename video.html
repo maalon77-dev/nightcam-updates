@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+  <title>NightCam · Vídeo</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #0B1220; color: #F1F5F9; }
+    header { padding: 20px 16px 8px; text-align: center; }
+    h1 { margin: 0; color: #2EE6A6; font-size: 22px; letter-spacing: .08em; }
+    .sub, .err, .hint { color: #94A3B8; font-size: 13px; margin-top: 8px; }
+    .hint { font-size: 12px; }
+    .err { color: #FB7185; padding: 24px; text-align: center; }
+    .wrap { padding: 12px 14px 40px; max-width: 720px; margin: 0 auto; }
+    .card { background: #121A2B; border: 1px solid #334155; border-radius: 16px; padding: 14px; margin: 14px 0; }
+    h2 { font-size: 15px; margin: 0 0 10px; word-break: break-all; }
+    video { width: 100%; border-radius: 12px; background: #000; max-height: 70vh; }
+    .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .actions a, .actions button {
+      width: 100%; text-align: center; padding: 16px 12px; border-radius: 12px;
+      font-weight: 700; font-size: 16px; text-decoration: none; border: 0; cursor: pointer;
+      font-family: inherit; display: block;
+    }
+    .btn-dl { background: #2EE6A6; color: #042F2E; }
+    .btn-dl-sub { background: #0C4A6E; color: #E0F2FE; font-size: 14px; padding: 12px; }
+    .status { font-size: 13px; color: #4CC9F0; text-align: center; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>NIGHTCAM</h1>
+    <div class="sub" id="subtitle">Vídeo compartilhado</div>
+    <div class="hint">Toque em <strong>BAIXAR VÍDEO</strong> para salvar no aparelho</div>
+  </header>
+  <div class="wrap" id="wrap">
+    <p class="err">Carregando…</p>
+  </div>
+  <script>
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function fileNameFromUrl(url, name) {
+      if (name) {
+        var n = String(name).replace(/[^\w.\-]+/g, '_');
+        if (!/\.(mp4|webm|3gp|mkv)$/i.test(n)) n += '.mp4';
+        return n;
+      }
+      try {
+        var path = new URL(url).pathname;
+        var base = path.split('/').pop() || 'nightcam_video.mp4';
+        if (!/\.(mp4|webm|3gp|mkv)$/i.test(base)) base += '.mp4';
+        return base;
+      } catch (e) { return 'nightcam_video.mp4'; }
+    }
+    function setStatus(msg) {
+      var el = document.getElementById('status');
+      if (el) el.textContent = msg || '';
+    }
+    function triggerDownload(url, fname) {
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+    async function downloadVideo(url, fname) {
+      setStatus('Preparando download…');
+      triggerDownload(url, fname);
+      try {
+        var res = await fetch(url, { mode: 'cors', credentials: 'omit' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var blob = await res.blob();
+        var obj = URL.createObjectURL(blob);
+        var b = document.createElement('a');
+        b.href = obj;
+        b.download = fname;
+        document.body.appendChild(b);
+        b.click();
+        b.remove();
+        setTimeout(function(){ URL.revokeObjectURL(obj); }, 3000);
+        setStatus('Download iniciado.');
+      } catch (e) {
+        setStatus('Se não baixou: use “Abrir arquivo” e salve pelo menu ⋮');
+      }
+    }
+    function main() {
+      var params = new URLSearchParams(location.search);
+      var videoUrl = params.get('v') || params.get('url') || params.get('src');
+      var name = params.get('n') || params.get('name') || '';
+      var wrap = document.getElementById('wrap');
+      if (!videoUrl) {
+        wrap.innerHTML = '<div class="err">Link inválido. Escaneie o QR de novo no NightCam.</div>';
+        return;
+      }
+      if (/%2F|%3A/i.test(videoUrl)) {
+        try { videoUrl = decodeURIComponent(videoUrl); } catch (e) {}
+      }
+      if (name && /%[0-9A-F]/i.test(name)) {
+        try { name = decodeURIComponent(name); } catch (e) {}
+      }
+      if (!/^https?:\/\//i.test(videoUrl)) {
+        wrap.innerHTML = '<div class="err">URL do vídeo inválida.</div>';
+        return;
+      }
+      var fname = fileNameFromUrl(videoUrl, name);
+      var title = name || fname;
+      document.getElementById('subtitle').textContent = title;
+      wrap.innerHTML =
+        '<article class="card">' +
+          '<h2>' + esc(title) + '</h2>' +
+          '<video src="' + esc(videoUrl) + '" controls playsinline preload="metadata"></video>' +
+          '<div class="status" id="status"></div>' +
+          '<div class="actions">' +
+            '<button type="button" class="btn-dl" id="btnDl">BAIXAR VÍDEO</button>' +
+            '<a class="btn-dl-sub" id="lnkDirect" href="' + esc(videoUrl) + '" download="' + esc(fname) + '" target="_blank" rel="noopener noreferrer">Baixar arquivo (link direto)</a>' +
+            '<a class="btn-dl-sub" href="' + esc(videoUrl) + '" target="_blank" rel="noopener noreferrer">Abrir no navegador</a>' +
+          '</div>' +
+        '</article>';
+      document.getElementById('btnDl').addEventListener('click', function() {
+        downloadVideo(videoUrl, fname);
+      });
+    }
+    main();
+  </script>
+</body>
+</html>
