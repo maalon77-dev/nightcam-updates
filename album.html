@@ -77,8 +77,36 @@
       if (!/\.(mp4|webm|3gp|mkv)$/i.test(n)) n += '.mp4';
       return n;
     }
+    function saveBlob(blob, fname) {
+      var obj = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = obj;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(obj); }, 8000);
+    }
+    function videoPageUrl(rawUrl, rawName) {
+      var base = 'https://raw.githack.com/maalon77-dev/nightcam-updates/main/video.html';
+      var q = '?v=' + encodeURIComponent(rawUrl);
+      if (rawName) q += '&n=' + encodeURIComponent(rawName);
+      return base + q;
+    }
     async function downloadVideo(url, name) {
       var fname = name || 'nightcam_video.mp4';
+      try {
+        var res = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'no-store' });
+        if (res.ok) {
+          var blob = await res.blob();
+          if (blob.size > 0) { saveBlob(blob, fname); return; }
+        }
+      } catch (e) {}
+      try {
+        var res2 = await fetch(url, { mode: 'no-cors', credentials: 'omit', cache: 'no-store' });
+        var blob2 = await res2.blob();
+        if (blob2 && blob2.size > 50000) { saveBlob(blob2, fname); return; }
+      } catch (e) {}
       var a = document.createElement('a');
       a.href = url;
       a.download = fname;
@@ -87,21 +115,6 @@
       document.body.appendChild(a);
       a.click();
       a.remove();
-      try {
-        var res = await fetch(url, { mode: 'cors', credentials: 'omit' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        var blob = await res.blob();
-        var obj = URL.createObjectURL(blob);
-        var b = document.createElement('a');
-        b.href = obj;
-        b.download = fname;
-        document.body.appendChild(b);
-        b.click();
-        b.remove();
-        setTimeout(function(){ URL.revokeObjectURL(obj); }, 3000);
-      } catch (e) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
     }
     function deleteVideo(url) {
       if (!confirm('Excluir este vídeo do álbum neste aparelho?')) return;
@@ -138,20 +151,23 @@
         return;
       }
       wrap.innerHTML = videos.map(function(v){
-        var name = esc(v.name || 'video');
-        var url = esc(v.url || '');
+        var rawUrl = v.url || '';
+        var rawName = v.name || 'video';
+        var name = esc(rawName);
+        var url = esc(rawUrl);
         var when = esc(fmt(v.uploadedAt));
         var fname = esc(fileNameFromVideo(v));
+        var page = esc(videoPageUrl(rawUrl, rawName));
         return '<article class="card">' +
           '<div class="meta">' + when + '</div>' +
           '<h2>' + name + '</h2>' +
           '<video src="' + url + '" controls playsinline preload="metadata"></video>' +
           '<div class="actions">' +
             '<button type="button" class="btn-dl" data-dl="' + url + '" data-name="' + fname + '">BAIXAR VÍDEO</button>' +
-            '<a class="btn-open" href="' + url + '" download="' + fname + '" target="_blank" rel="noopener noreferrer">Salvar arquivo (MP4)</a>' +
+            '<a class="btn-open" href="' + page + '">Página só deste vídeo (QR / download)</a>' +
+            '<a class="btn-open" href="' + url + '" download="' + fname + '" target="_blank" rel="noopener noreferrer">Link direto MP4</a>' +
             '<button type="button" class="btn-del" data-del="' + url + '">EXCLUIR</button>' +
           '</div>' +
-          '<a class="btn-open" href="' + url + '" target="_blank" rel="noopener noreferrer">Abrir no navegador</a>' +
         '</article>';
       }).join('');
 
