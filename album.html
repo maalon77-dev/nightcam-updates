@@ -4,6 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
   <title>NightCam Album</title>
+  <script src="nightcam-download.js"></script>
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -19,9 +20,9 @@
     .meta { color: #64748B; font-size: 12px; }
     h2 { font-size: 15px; margin: 6px 0 10px; word-break: break-all; }
     video { width: 100%; border-radius: 12px; background: #000; max-height: 70vh; }
-    .actions { display: flex; gap: 8px; margin-top: 12px; }
+    .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
     .actions a, .actions button {
-      flex: 1; text-align: center; padding: 14px 8px; border-radius: 12px;
+      width: 100%; text-align: center; padding: 14px 8px; border-radius: 12px;
       font-weight: 700; font-size: 15px; text-decoration: none; border: 0; cursor: pointer;
       font-family: inherit;
     }
@@ -77,44 +78,11 @@
       if (!/\.(mp4|webm|3gp|mkv)$/i.test(n)) n += '.mp4';
       return n;
     }
-    function saveBlob(blob, fname) {
-      var obj = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = obj;
-      a.download = fname;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(function(){ URL.revokeObjectURL(obj); }, 8000);
-    }
     function videoPageUrl(rawUrl, rawName) {
       var base = 'https://raw.githack.com/maalon77-dev/nightcam-updates/main/video.html';
       var q = '?v=' + encodeURIComponent(rawUrl);
       if (rawName) q += '&n=' + encodeURIComponent(rawName);
       return base + q;
-    }
-    async function downloadVideo(url, name) {
-      var fname = name || 'nightcam_video.mp4';
-      try {
-        var res = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'no-store' });
-        if (res.ok) {
-          var blob = await res.blob();
-          if (blob.size > 0) { saveBlob(blob, fname); return; }
-        }
-      } catch (e) {}
-      try {
-        var res2 = await fetch(url, { mode: 'no-cors', credentials: 'omit', cache: 'no-store' });
-        var blob2 = await res2.blob();
-        if (blob2 && blob2.size > 50000) { saveBlob(blob2, fname); return; }
-      } catch (e) {}
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = fname;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
     }
     function deleteVideo(url) {
       if (!confirm('Excluir este vídeo do álbum neste aparelho?')) return;
@@ -162,18 +130,28 @@
           '<div class="meta">' + when + '</div>' +
           '<h2>' + name + '</h2>' +
           '<video src="' + url + '" controls playsinline preload="metadata"></video>' +
+          '<p class="meta dl-status" data-status-for="' + url + '"></p>' +
           '<div class="actions">' +
             '<button type="button" class="btn-dl" data-dl="' + url + '" data-name="' + fname + '" aria-label="Baixar vídeo">Baixar vídeo</button>' +
-            '<a class="btn-open" href="' + page + '">Página só deste vídeo (QR / download)</a>' +
-            '<a class="btn-open" href="' + url + '" download="' + fname + '" target="_blank" rel="noopener noreferrer">Link direto MP4</a>' +
-            '<button type="button" class="btn-del" data-del="' + url + '">EXCLUIR</button>' +
+            '<a class="btn-open" href="' + page + '">Página deste vídeo (melhor no celular)</a>' +
+            '<a class="btn-open" href="' + url + '" download="' + fname + '" target="_blank" rel="noopener noreferrer">Arquivo MP4 (computador)</a>' +
+            '<button type="button" class="btn-del" data-del="' + url + '">Excluir da lista</button>' +
           '</div>' +
         '</article>';
       }).join('');
 
       wrap.querySelectorAll('[data-dl]').forEach(function(btn){
         btn.addEventListener('click', function(){
-          downloadVideo(btn.getAttribute('data-dl'), btn.getAttribute('data-name'));
+          var u = btn.getAttribute('data-dl');
+          var n = btn.getAttribute('data-name');
+          var st = wrap.querySelector('[data-status-for="' + u + '"]');
+          btn.disabled = true;
+          var old = btn.textContent;
+          btn.textContent = 'Baixando…';
+          NightCamDownload.downloadVideo(u, n, {
+            onStatus: function(msg) { if (st) st.textContent = msg; },
+            onDone: function() { btn.disabled = false; btn.textContent = old; }
+          });
         });
       });
       wrap.querySelectorAll('[data-del]').forEach(function(btn){
