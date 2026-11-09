@@ -1,8 +1,8 @@
 {
-  "versionCode": 34,
-  "versionName": "2.1.11",
-  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.11/NightCam-v2.1.11.apk",
-  "apkBytes": 7287946,
-  "notes": "Preview no relogio em pe (nao mais de lado). 2.1.11",
-  "publishedAt": "2026-11-09T10:26:12Z"
+  "versionCode": 35,
+  "versionName": "2.1.12",
+  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.12/NightCam-v2.1.12.apk",
+  "apkBytes": 7288486,
+  "notes": "Preview no relogio: gira +90 para ficar em pe (0/180 ficavam de lado). 2.1.12",
+  "publishedAt": "2026-11-09T10:29:59Z"
 }
