@@ -1,8 +1,8 @@
 {
-  "versionCode": 36,
-  "versionName": "2.1.13",
-  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.13/NightCam-v2.1.13.apk",
-  "apkBytes": 7288978,
-  "notes": "Preview em pe no quadrado: nao soma +90 se sensor ja e 90 (evita 180 deitado). 2.1.13",
-  "publishedAt": "2026-11-09T12:23:08Z"
+  "versionCode": 37,
+  "versionName": "2.1.14",
+  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.14/NightCam-v2.1.14.apk",
+  "apkBytes": 7289146,
+  "notes": "Preview: gira a view (nao Matrix) + proporcao correta \u2014 em pe e sem achatar. 2.1.14",
+  "publishedAt": "2026-11-09T12:45:34Z"
 }
