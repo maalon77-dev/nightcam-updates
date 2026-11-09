@@ -1,7 +1,8 @@
 {
-  "versionCode": 32,
-  "versionName": "2.1.9",
-  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.9/NightCam-v2.1.9.apk",
-  "notes": "Preview da camera corrigido: rotacao em pe, sem distorcer, menos lag. 2.1.9",
-  "publishedAt": "2026-11-09T10:18:40Z"
+  "versionCode": 33,
+  "versionName": "2.1.10",
+  "apkUrl": "https://github.com/maalon77-dev/nightcam-updates/releases/download/v2.1.10/NightCam-v2.1.10.apk",
+  "apkBytes": 7288054,
+  "notes": "Corrige barra de progresso da atualizacao (nao fica mais em 0%). 2.1.10",
+  "publishedAt": "2026-11-09T10:23:38Z"
 }
